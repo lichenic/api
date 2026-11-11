@@ -5,8 +5,10 @@
     "main": "dist/server.js",
     "scripts": {
         "dev": "tsx watch src/server.ts",
-        "build": "tsc",
-        "start": "node dist/server.js"
+        "build": "tsc -p tsconfig.build.json",
+        "start": "node dist/server.js",
+        "db:generate": "drizzle-kit generate",
+        "db:migrate": "drizzle-kit migrate"
     },
     "keywords": [],
     "author": "",
@@ -23,10 +25,14 @@
     "dependencies": {
         "@hono/node-server": "^2.1.6",
         "dotenv": "^18.0.10",
-        "hono": "^4.13.17"
+        "drizzle-orm": "^0.45.4",
+        "hono": "^4.13.17",
+        "pg": "^8.23.1"
     },
     "devDependencies": {
         "@types/node": "^26.6.6",
+        "@types/pg": "^8.23.1",
+        "drizzle-kit": "^0.31.11",
         "tsx": "^4.23.15",
         "typescript": "^7.0.2"
     }

@@ -1,0 +1,14 @@
+services:
+    db:
+        image: postgres:17
+        environment:
+            POSTGRES_USER: lichenic
+            POSTGRES_PASSWORD: lichenic
+            POSTGRES_DB: lichenic
+        ports:
+            - "5436:5432"
+        volumes:
+            - pgdata:/var/lib/postgresql/data
+
+volumes:
+    pgdata:
