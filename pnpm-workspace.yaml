@@ -1,2 +1,8 @@
 allowBuilds:
+  builds: true
   esbuild: true
+permissions:
+  argon2:
+    build: true
+  builds:
+    skills: true
