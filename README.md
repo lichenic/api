@@ -1,6 +1,6 @@
 # api
 
-The backend for lichenic, a new social media app.
+The backend for lichenic, a social media app.
 
 ## Setup
 
