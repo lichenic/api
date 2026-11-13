@@ -1,13 +1,13 @@
 import argon2 from "argon2";
 import { eq, or } from "drizzle-orm";
 import { Hono } from "hono";
-import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { randomBytes } from "node:crypto";
 import { z } from "zod";
 import { db } from "#db";
 import { sessions, users } from "#db/schema.js";
+import { getBearerToken, requireSession, type SessionVariables } from "#api/lib/session.js";
 
-export const auth = new Hono();
+export const auth = new Hono<{ Variables: SessionVariables }>();
 
 const SESSION_DAYS = 7;
 
@@ -26,17 +26,11 @@ const loginSchema = z.object({
     password: z.string().min(1),
 });
 
-async function startSession(c: any, userId: string) {
+async function startSession(userId: string) {
     const id = randomBytes(32).toString("hex");
     const expiresAt = new Date(Date.now() + SESSION_DAYS * 86_400_000);
     await db.insert(sessions).values({ id, userId, expiresAt });
-    setCookie(c, "session", id, {
-        httpOnly: true,
-        sameSite: "Lax",
-        secure: process.env.NODE_ENV === "production",
-        path: "/",
-        expires: expiresAt,
-    });
+    return id;
 }
 
 auth.post("/register", async c => {
@@ -57,8 +51,8 @@ auth.post("/register", async c => {
         .values({ username, email: email.toLowerCase(), passwordHash })
         .returning({ id: users.id, username: users.username });
 
-    await startSession(c, user.id);
-    return c.json(user, 201);
+    const token = await startSession(user.id);
+    return c.json({ ...user, token }, 201);
 });
 
 auth.post("/login", async c => {
@@ -77,59 +71,22 @@ auth.post("/login", async c => {
         return c.json({ error: "invalid credentials" }, 401);
     }
 
-    await startSession(c, user.id);
-    return c.json({ id: user.id, username: user.username });
+    const token = await startSession(user.id);
+    return c.json({ id: user.id, username: user.username, token });
 });
 
 auth.post("/logout", async c => {
-    const id = getCookie(c, "session");
+    const id = getBearerToken(c);
     if (id) await db.delete(sessions).where(eq(sessions.id, id));
-    deleteCookie(c, "session", { path: "/" });
     return c.json({ ok: true });
 });
 
-auth.post("/logout-all", async c => {
-    const id = getCookie(c, "session");
-    if (id) {
-        const [session] = await db
-            .select({ userId: sessions.userId })
-            .from(sessions)
-            .where(eq(sessions.id, id))
-            .limit(1);
-        if (session) await db.delete(sessions).where(eq(sessions.userId, session.userId));
-    }
-    deleteCookie(c, "session", { path: "/" });
+auth.post("/logout-all", requireSession, async c => {
+    const { userId } = c.get("session");
+    await db.delete(sessions).where(eq(sessions.userId, userId));
     return c.json({ ok: true });
 });
 
-auth.get("/me", async c => {
-    const id = getCookie(c, "session");
-    if (!id) return c.json({ error: "not authenticated" }, 401);
-
-    const [row] = await db
-        .select({
-            expiresAt: sessions.expiresAt,
-            id: users.id,
-            username: users.username,
-            email: users.email,
-            createdAt: users.createdAt,
-        })
-        .from(sessions)
-        .innerJoin(users, eq(sessions.userId, users.id))
-        .where(eq(sessions.id, id))
-        .limit(1);
-
-    if (!row) {
-        deleteCookie(c, "session", { path: "/" });
-        return c.json({ error: "not authenticated" }, 401);
-    }
-
-    if (row.expiresAt < new Date()) {
-        await db.delete(sessions).where(eq(sessions.id, id));
-        deleteCookie(c, "session", { path: "/" });
-        return c.json({ error: "session expired" }, 401);
-    }
-
-    const { expiresAt, ...user } = row;
-    return c.json(user);
+auth.get("/me", requireSession, async c => {
+    return c.json(c.get("session").user);
 });
