@@ -101,3 +101,35 @@ auth.post("/logout-all", async c => {
     deleteCookie(c, "session", { path: "/" });
     return c.json({ ok: true });
 });
+
+auth.get("/me", async c => {
+    const id = getCookie(c, "session");
+    if (!id) return c.json({ error: "not authenticated" }, 401);
+
+    const [row] = await db
+        .select({
+            expiresAt: sessions.expiresAt,
+            id: users.id,
+            username: users.username,
+            email: users.email,
+            createdAt: users.createdAt,
+        })
+        .from(sessions)
+        .innerJoin(users, eq(sessions.userId, users.id))
+        .where(eq(sessions.id, id))
+        .limit(1);
+
+    if (!row) {
+        deleteCookie(c, "session", { path: "/" });
+        return c.json({ error: "not authenticated" }, 401);
+    }
+
+    if (row.expiresAt < new Date()) {
+        await db.delete(sessions).where(eq(sessions.id, id));
+        deleteCookie(c, "session", { path: "/" });
+        return c.json({ error: "session expired" }, 401);
+    }
+
+    const { expiresAt, ...user } = row;
+    return c.json(user);
+});
