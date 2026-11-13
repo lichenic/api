@@ -15,6 +15,13 @@
       "when": 1794423904801,
       "tag": "0001_wise_typhoid_mary",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794429779742,
+      "tag": "0002_big_kulan_gath",
+      "breakpoints": true
     }
   ]
 }
