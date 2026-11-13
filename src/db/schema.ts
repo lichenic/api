@@ -34,7 +34,7 @@ export const postBlocks = pgTable(
             .notNull()
             .references(() => posts.id, { onDelete: "cascade" }),
         position: integer("position").notNull(),
-        type: text("type").notNull(), // just "text" for now
+        type: text("type").$type<"text">().notNull(), // just "text" for now
         content: jsonb("content").notNull(), // { text: "..." }
     },
     t => [unique().on(t.postId, t.position)],
