@@ -4,8 +4,8 @@ import { Hono } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { randomBytes } from "node:crypto";
 import { z } from "zod";
-import { db } from "./db/index.js";
-import { sessions, users } from "./db/schema.js";
+import { db } from "#db";
+import { sessions, users } from "#db/schema.js";
 
 export const auth = new Hono();
 
@@ -17,7 +17,7 @@ const registerSchema = z.object({
         .min(3)
         .max(24)
         .regex(/^[a-z0-9_]+$/i),
-    email: z.string().email(),
+    email: z.email(),
     password: z.string().min(8).max(128),
 });
 

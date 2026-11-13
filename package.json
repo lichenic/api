@@ -37,5 +37,19 @@
         "drizzle-kit": "^0.31.11",
         "tsx": "^4.23.15",
         "typescript": "^7.0.2"
+    },
+    "imports": {
+        "#api/*": {
+            "types": "./src/*",
+            "default": "./dist/*"
+        },
+        "#db": {
+            "types": "./src/db/index.ts",
+            "default": "./dist/db/index.js"
+        },
+        "#db/*": {
+            "types": "./src/db/*",
+            "default": "./dist/db/*"
+        }
     }
 }
