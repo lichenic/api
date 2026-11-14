@@ -29,7 +29,7 @@ export function getBearerToken(c: { req: { header(name: string): string | undefi
 
 export const requireSession = createMiddleware<{ Variables: SessionVariables }>(async (c, next) => {
     const token = getBearerToken(c);
-    if (!token) return c.json({ error: "not authenticated" }, 401);
+    if (!token) return c.fail("auth.unauthenticated", "not authenticated", 401);
 
     const [session] = await db
         .select({
@@ -48,11 +48,11 @@ export const requireSession = createMiddleware<{ Variables: SessionVariables }>(
         .where(eq(sessions.id, token))
         .limit(1);
 
-    if (!session) return c.json({ error: "not authenticated" }, 401);
+    if (!session) return c.fail("auth.unauthenticated", "not authenticated", 401);
 
     if (session.expiresAt < new Date()) {
         await db.delete(sessions).where(eq(sessions.id, token));
-        return c.json({ error: "session expired" }, 401);
+        return c.fail("auth.session_expired", "session expired", 401);
     }
 
     c.set("session", session);
