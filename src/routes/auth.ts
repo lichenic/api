@@ -5,7 +5,12 @@ import { randomBytes } from "node:crypto";
 import { z } from "zod";
 import { db } from "#db";
 import { sessions, users } from "#db/schema.js";
-import { getBearerToken, requireSession, type SessionVariables } from "#api/lib/session.js";
+import {
+    getBearerToken,
+    requireSession,
+    type SessionVariables,
+} from "#api/services/auth.js";
+import { toPublicUser } from "#api/services/user.js";
 
 export const auth = new Hono<{ Variables: SessionVariables }>();
 
@@ -49,10 +54,10 @@ auth.post("/register", async c => {
     const [user] = await db
         .insert(users)
         .values({ username, email: email.toLowerCase(), passwordHash })
-        .returning({ id: users.id, username: users.username });
+        .returning();
 
     const token = await startSession(user.id);
-    return c.json({ ...user, token }, 201);
+    return c.json({ ...toPublicUser(user), token }, 201);
 });
 
 auth.post("/login", async c => {
@@ -72,7 +77,7 @@ auth.post("/login", async c => {
     }
 
     const token = await startSession(user.id);
-    return c.json({ id: user.id, username: user.username, token });
+    return c.json({ ...toPublicUser(user), token });
 });
 
 auth.post("/logout", async c => {
