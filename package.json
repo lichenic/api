@@ -1,7 +1,7 @@
 {
     "name": "lichenic-api",
     "version": "0.1.0",
-    "description": "The backend for lichenic, a new social media app",
+    "description": "The backend for lichenic, a social media app",
     "main": "dist/server.js",
     "scripts": {
         "dev": "tsx watch src/server.ts",
