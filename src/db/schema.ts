@@ -1,10 +1,12 @@
-import { integer, jsonb, pgTable, text, timestamp, unique, uuid } from "drizzle-orm/pg-core";
+import { boolean, integer, jsonb, pgTable, text, timestamp, unique, uuid, type AnyPgColumn } from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
     id: uuid("id").primaryKey().defaultRandom(),
     username: text("username").notNull().unique(),
-    email: text("email").notNull().unique(),
-    passwordHash: text("password_hash").notNull(),
+    email: text("email").unique(),
+    passwordHash: text("password_hash"),
+    isBot: boolean("is_bot").notNull().default(false),
+    ownerId: uuid("owner_id").references((): AnyPgColumn => users.id, { onDelete: "cascade" }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -39,3 +41,16 @@ export const postBlocks = pgTable(
     },
     t => [unique().on(t.postId, t.position)],
 );
+
+export const apiTokens = pgTable("api_tokens", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+        .notNull()
+        .references(() => users.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    tokenHash: text("token_hash").notNull().unique(),
+    prefix: text("prefix").notNull(), // to tell tokens apart
+    expiresAt: timestamp("expires_at", { withTimezone: true }), // null = never expires
+    lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});

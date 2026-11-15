@@ -1,11 +1,11 @@
+import { db } from "#db";
+import { sessions, users } from "#db/schema.js";
 import argon2 from "argon2";
 import { eq, or } from "drizzle-orm";
 import { Hono } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { randomBytes } from "node:crypto";
 import { z } from "zod";
-import { db } from "#db";
-import { sessions, users } from "#db/schema.js";
 
 export const auth = new Hono();
 
@@ -73,7 +73,7 @@ auth.post("/login", async c => {
         .limit(1);
 
     // same error for unknown user and wrong password
-    if (!user || !(await argon2.verify(user.passwordHash, password))) {
+    if (!user || !user.passwordHash || !(await argon2.verify(user.passwordHash, password))) {
         return c.json({ error: "invalid credentials" }, 401);
     }
 
