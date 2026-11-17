@@ -6,7 +6,10 @@ export type SuccessCode =
     | "auth.login"
     | "auth.logout"
     | "auth.logout_all"
-    | "auth.me";
+    | "auth.me"
+    | "posts.create"
+    | "posts.list"
+    | "posts.get";
 
 export type ErrorCode =
     | "auth.invalid_input"
@@ -14,6 +17,8 @@ export type ErrorCode =
     | "auth.invalid_credentials"
     | "auth.unauthenticated"
     | "auth.session_expired"
+    | "posts.invalid_input"
+    | "posts.not_found"
     | "not_found"
     | "http_error"
     | "internal_error";

@@ -26,7 +26,7 @@ export const requireAuth = createMiddleware<{
                 ),
             )
             .limit(1);
-        if (!row) return c.json({ error: "unauthorized" }, 401);
+        if (!row) return c.fail("auth.unauthenticated", "unauthorized", 401);
 
         // fire and forget
         db.update(apiTokens)
@@ -40,7 +40,7 @@ export const requireAuth = createMiddleware<{
     }
 
     const sessionId = getCookie(c, "session");
-    if (!sessionId) return c.json({ error: "unauthorized" }, 401);
+    if (!sessionId) return c.fail("auth.unauthenticated", "unauthorized", 401);
 
     const [row] = await db
         .select({ id: users.id, username: users.username })
@@ -48,7 +48,7 @@ export const requireAuth = createMiddleware<{
         .innerJoin(users, eq(sessions.userId, users.id))
         .where(and(eq(sessions.id, sessionId), gt(sessions.expiresAt, new Date())))
         .limit(1);
-    if (!row) return c.json({ error: "unauthorized" }, 401);
+    if (!row) return c.fail("auth.unauthenticated", "unauthorized", 401);
 
     c.set("user", row);
     c.set("authVia", "session");

@@ -5,6 +5,7 @@ import { fail } from "./lib/response.js";
 import { requestLogger } from "./middleware/log.js";
 import { responseHelpers } from "./middleware/response.js";
 import { auth } from "./routes/auth.js";
+import { postsRoute } from "./routes/posts.js";
 
 export const app = new Hono();
 
@@ -15,6 +16,7 @@ app.get("/", c => c.text("lichenic server is running!"));
 app.get("/health", c => c.json({ ok: true }));
 
 app.route("/auth", auth);
+app.route("/posts", postsRoute);
 
 app.notFound(c => fail(c, "not_found", "route not found", 404));
 

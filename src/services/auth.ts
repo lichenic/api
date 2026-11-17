@@ -10,7 +10,7 @@ export type AuthSession = {
     user: {
         id: string;
         username: string;
-        email: string;
+        email: string | null;
         createdAt: Date;
     };
 };
