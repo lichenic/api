@@ -1,4 +1,4 @@
-import { boolean, integer, jsonb, pgTable, text, timestamp, unique, uuid, type AnyPgColumn } from "drizzle-orm/pg-core";
+import { boolean, index, integer, jsonb, pgTable, primaryKey, text, timestamp, unique, uuid, type AnyPgColumn } from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
     id: uuid("id").primaryKey().defaultRandom(),
@@ -19,14 +19,44 @@ export const sessions = pgTable("sessions", {
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
-export const posts = pgTable("posts", {
-    id: uuid("id").primaryKey().defaultRandom(),
-    authorId: uuid("author_id")
-        .notNull()
-        .references(() => users.id, { onDelete: "cascade" }),
-    title: text("title").notNull(),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+export const posts = pgTable(
+    "posts",
+    {
+        id: uuid("id").primaryKey().defaultRandom(),
+        authorId: uuid("author_id")
+            .notNull()
+            .references(() => users.id, { onDelete: "cascade" }),
+        title: text("title").notNull(),
+        replyToId: uuid("reply_to_id").references((): AnyPgColumn => posts.id, { onDelete: "cascade" }),
+        createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    },
+    t => [
+        index("posts_created_at_id_idx").on(t.createdAt, t.id),
+        index("posts_reply_to_id_idx").on(t.replyToId),
+    ],
+);
+
+export const interactionTypes = ["like", "repost", "hide"] as const;
+export type InteractionType = (typeof interactionTypes)[number];
+
+export const interactions = pgTable(
+    "interactions",
+    {
+        postId: uuid("post_id")
+            .notNull()
+            .references(() => posts.id, { onDelete: "cascade" }),
+        userId: uuid("user_id")
+            .notNull()
+            .references(() => users.id, { onDelete: "cascade" }),
+        type: text("type").$type<InteractionType>().notNull(),
+        createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    },
+    t => [
+        primaryKey({ columns: [t.postId, t.userId, t.type] }),
+        index("interactions_post_id_type_idx").on(t.postId, t.type),
+        index("interactions_user_id_type_idx").on(t.userId, t.type),
+    ],
+);
 
 export const postBlocks = pgTable(
     "post_blocks",

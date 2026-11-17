@@ -5,6 +5,7 @@ import { fail } from "./lib/response.js";
 import { requestLogger } from "./middleware/log.js";
 import { responseHelpers } from "./middleware/response.js";
 import { auth } from "./routes/auth.js";
+import { interactionsRoute } from "./routes/interactions.js";
 import { postsRoute } from "./routes/posts.js";
 
 export const app = new Hono();
@@ -17,6 +18,7 @@ app.get("/health", c => c.json({ ok: true }));
 
 app.route("/auth", auth);
 app.route("/posts", postsRoute);
+app.route("/posts", interactionsRoute);
 
 app.notFound(c => fail(c, "not_found", "route not found", 404));
 

@@ -9,7 +9,15 @@ export type SuccessCode =
     | "auth.me"
     | "posts.create"
     | "posts.list"
-    | "posts.get";
+    | "posts.get"
+    | "posts.reply"
+    | "posts.replies"
+    | "posts.like"
+    | "posts.unlike"
+    | "posts.repost"
+    | "posts.unrepost"
+    | "posts.hide"
+    | "posts.unhide";
 
 export type ErrorCode =
     | "auth.invalid_input"

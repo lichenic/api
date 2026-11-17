@@ -1,11 +1,9 @@
 import { Hono } from "hono";
 import { z } from "zod";
-import { requireAuth } from "../middleware/auth.js";
+import { optionalAuth, requireAuth } from "../middleware/auth.js";
 import { createPost, getPost, listPosts } from "../services/posts.js";
 
-export const postsRoute = new Hono<{
-    Variables: { user: { id: string; username: string }; authVia: "session" | "token" };
-}>();
+export const postsRoute = new Hono();
 
 const createSchema = z.object({
     title: z.string().min(1).max(200),
@@ -25,15 +23,15 @@ postsRoute.post("/", requireAuth, async c => {
     return c.ok("posts.create", post, 201);
 });
 
-postsRoute.get("/", async c => {
-    return c.ok("posts.list", await listPosts());
+postsRoute.get("/", optionalAuth, async c => {
+    return c.ok("posts.list", await listPosts(20, c.get("user")?.id));
 });
 
-postsRoute.get("/:id", async c => {
+postsRoute.get("/:id", optionalAuth, async c => {
     const id = c.req.param("id");
     if (!z.uuid().safeParse(id).success) return c.fail("posts.not_found", "not found", 404);
 
-    const post = await getPost(id);
+    const post = await getPost(id, c.get("user")?.id);
     if (!post) return c.fail("posts.not_found", "not found", 404);
 
     return c.ok("posts.get", post);

@@ -43,6 +43,13 @@
       "when": 1794749427791,
       "tag": "0005_bent_hellion",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794941936622,
+      "tag": "0006_tiresome_firebrand",
+      "breakpoints": true
     }
   ]
 }
